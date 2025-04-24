@@ -1,30 +1,41 @@
 console.log("✅ Content script running");
 
-// window.addEventListener("load", () => {
-//     chrome.storage.local.get("openai_api_key", ({ openai_api_key }) => {
-//         if (!openai_api_key) {
-//             console.warn("❌ API key 尚未設定！");
-//             return;
-//         }
+function callOpenAI(promptText, callback) {
+    chrome.storage.local.get("openai_api_key", ({ openai_api_key }) => {
+        if (!openai_api_key) {
+            console.warn("❌ API key 尚未設定！");
+            return;
+        }
 
-//         fetch("https://api.openai.com/v1/chat/completions", {
-//             method: "POST",
-//             headers: {
-//                 Authorization: `Bearer ${openai_api_key}`,
-//                 "Content-Type": "application/json"
-//             },
-//             body: JSON.stringify({
-//                 model: "gpt-4.1-nano",
-//                 messages: [{ role: "user", content: "hello world" }]
-//             })
-//         })
-//             .then(res => res.json())
-//             .then(data => {
-//                 console.log("✅ OpenAI 回應：", data.choices[0].message.content);
-//             })
-//             .catch(err => {
-//                 console.error("❌ API 錯誤：", err);
-//             });
+        fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${openai_api_key}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "gpt-4.1-nano", // 🔥 你指定的模型
+                messages: [{ role: "user", content: promptText }],
+                temperature: 0.7
+            })
+        })
+            .then(console.log("✅ Asked GPT：", promptText))
+            .then(res => res.json())
+            .then(data => {
+                const reply = data.choices?.[0]?.message?.content;
+                console.log("✅ GPT 回應：", reply);
+                if (callback) callback(reply);
+            })
+            .catch(err => {
+                console.error("❌ API 錯誤：", err);
+            });
+    });
+}
+
+// for debugging
+// window.addEventListener("load", () => {
+//     callOpenAI("hello world", (reply) => {
+//         console.log("🧠 GPT 說：", reply);
 //     });
 // });
 
