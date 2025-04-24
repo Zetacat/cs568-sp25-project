@@ -1,0 +1,22 @@
+{
+    "manifest_version": 3,
+    "name": "Prompticle",
+    "version": "1.0",
+    "permissions": [
+        "scripting",
+        "activeTab"
+    ],
+    "host_permissions": [
+        "https://chatgpt.com/*"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "https://chatgpt.com/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ]
+}
