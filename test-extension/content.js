@@ -1,5 +1,33 @@
 console.log("✅ Content script running");
 
+// window.addEventListener("load", () => {
+//     chrome.storage.local.get("openai_api_key", ({ openai_api_key }) => {
+//         if (!openai_api_key) {
+//             console.warn("❌ API key 尚未設定！");
+//             return;
+//         }
+
+//         fetch("https://api.openai.com/v1/chat/completions", {
+//             method: "POST",
+//             headers: {
+//                 Authorization: `Bearer ${openai_api_key}`,
+//                 "Content-Type": "application/json"
+//             },
+//             body: JSON.stringify({
+//                 model: "gpt-4.1-nano",
+//                 messages: [{ role: "user", content: "hello world" }]
+//             })
+//         })
+//             .then(res => res.json())
+//             .then(data => {
+//                 console.log("✅ OpenAI 回應：", data.choices[0].message.content);
+//             })
+//             .catch(err => {
+//                 console.error("❌ API 錯誤：", err);
+//             });
+//     });
+// });
+
 function injectSafeStyledButton() {
     if (document.getElementById("tag-translate-btn")) return;
 
