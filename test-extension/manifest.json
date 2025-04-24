@@ -4,10 +4,12 @@
     "version": "1.0",
     "permissions": [
         "scripting",
-        "activeTab"
+        "activeTab",
+        "storage"
     ],
     "host_permissions": [
-        "https://chatgpt.com/*"
+        "https://chatgpt.com/*",
+        "https://api.openai.com/*"
     ],
     "content_scripts": [
         {
@@ -18,5 +20,9 @@
                 "content.js"
             ]
         }
-    ]
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "Set OpenAI Key"
+    }
 }
