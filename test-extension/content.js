@@ -3,7 +3,8 @@ console.log("✅ Content script running");
 function callOpenAI(promptText, callback) {
     chrome.storage.local.get("openai_api_key", ({ openai_api_key }) => {
         if (!openai_api_key) {
-            console.warn("❌ API key 尚未設定！");
+            console.warn("API key not found");
+            alert("Please set your OpenAI API key in the extension options.");
             return;
         }
 
@@ -22,11 +23,11 @@ function callOpenAI(promptText, callback) {
             .then(res => res.json())
             .then(data => {
                 const reply = data.choices?.[0]?.message?.content;
-                console.log("✅ GPT 回應：", reply);
+                console.log("OpenAI reply", reply);
                 if (callback) callback(reply);
             })
             .catch(err => {
-                console.error("❌ API 錯誤：", err);
+                console.error("API error", err);
             });
     });
 }
@@ -34,6 +35,15 @@ function callOpenAI(promptText, callback) {
 function injectButtons() {
     const buttonContainer = document.querySelector('[data-testid="composer-footer-actions"]');
     if (!buttonContainer || document.getElementById("tag-translate-btn")) return;
+    // Add 'flex-wrap' to allow wrapping
+    buttonContainer.classList.add('flex-wrap');
+    // (Optional) Remove 'overflow-x-auto' if you don't want horizontal scroll anymore
+    buttonContainer.classList.remove('overflow-x-auto');
+    // Adjust spacer height to avoid blocking input
+    const inputContainer = document.querySelector('div.relative.flex.w-full.items-end.px-3.py-3');
+    if (inputContainer) {
+        inputContainer.style.paddingBottom = "6rem"; // or 7rem (adjust based on how many rows you have)
+    }
 
     // Translate Button
     const translateBtn = document.createElement("button");
@@ -48,7 +58,7 @@ function injectButtons() {
            2 2-.9 2-2 2zm-1-14h2v6h-2V6z"
           fill="currentColor"/>
       </svg>
-      翻譯
+      Translate
     `;
     translateBtn.className = `
       flex items-center justify-center h-9 rounded-full border border-token-border-default text-token-text-secondary min-w-8 w-auto px-3 text-[13px] font-semibold hover:bg-token-main-surface-secondary transition
@@ -60,7 +70,7 @@ function injectButtons() {
         const inputBox = document.querySelector("#prompt-textarea");
         if (!inputBox) return;
 
-        inputBox.innerText = "請幫我翻譯：\n" + inputBox.innerText;
+        inputBox.innerText = "Translate\n" + inputBox.innerText;
         setTimeout(() => inputBox.dispatchEvent(new InputEvent("input", { bubbles: true })), 0);
     });
 
@@ -69,7 +79,7 @@ function injectButtons() {
     // Generate Tag Button
     const genTagBtn = document.createElement("button");
     genTagBtn.id = "tag-generate-btn";
-    genTagBtn.innerHTML = `🧠 生成新標籤`;
+    genTagBtn.innerHTML = `Generate new tags`;
     genTagBtn.className = `
       flex items-center justify-center h-9 rounded-full border border-token-border-default text-token-text-secondary min-w-8 w-auto px-3 ml-2 text-[13px] font-semibold hover:bg-token-main-surface-secondary transition
     `;
@@ -81,40 +91,60 @@ function injectButtons() {
         const inputBox = document.querySelector("#prompt-textarea");
         if (!inputBox) return;
 
+        // First remove all previous generated tag buttons
+        const oldTagButtons = buttonContainer.querySelectorAll(".generated-tag-btn");
+        oldTagButtons.forEach(btn => btn.remove());
+
         const userInput = inputBox.innerText;
-        const prompt = `Suggest a single concise tag (in English) and a brief instruction (prompt) based on the following user input:\n"${userInput}". Return it in this format:\nTag: <your-tag>\nPrompt: <your-prompt>`;
+        const prompt = `Given the following input content, generate 5 short, relevant tags that reflect the user's possible intents or actions. 
+        Each tag should be 1-3 words long, action-oriented or descriptive, and helpful for guiding the next interaction. 
+        Prefer verbs when appropriate. If the context is technical, include domain-specific tags.
+        Respond strictly with the tags inside square brackets, with each tag separated by a comma and a space. 
+        For example: [Summarize, Fix Error].
+        Input: ${userInput}`;
 
         callOpenAI(prompt, (reply) => {
-            const tagMatch = reply.match(/Tag:\s*(.*)\nPrompt:\s*(.*)/);
+
+            const tagMatch = reply.match(/^\[([^\]]+)\]$/);
             if (!tagMatch) {
-                console.warn("❌ 回覆格式錯誤：", reply);
+                console.warn("format error", reply);
                 return;
             }
-            const [_, newTag, newPrompt] = tagMatch;
+            const tags = tagMatch[1].split(", ").map(tag => tag.trim());
+            console.log("tag generated", tags);
 
-            const newTagBtn = document.createElement("button");
-            newTagBtn.className = `
-              flex items-center justify-center h-8 rounded-full border border-token-border-default text-token-text-secondary px-2 ml-2 text-[12px] font-semibold hover:bg-token-main-surface-secondary transition
-            `;
-            newTagBtn.textContent = newTag;
+            for (const newTag of tags) {
+                const newTagBtn = document.createElement("button");
+                newTagBtn.className = `
+                generated-tag-btn flex items-center justify-center h-8 rounded-full border border-token-border-default text-token-text-secondary px-2 ml-2 text-[12px] font-semibold hover:bg-token-main-surface-secondary transition
+                `;
+                newTagBtn.textContent = newTag;
 
-            newTagBtn.addEventListener("click", (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                inputBox.innerText = newPrompt + "\n" + inputBox.innerText;
-                setTimeout(() => inputBox.dispatchEvent(new InputEvent("input", { bubbles: true })), 0);
-            });
+                newTagBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const newPrompt = `Given an input, a tag, and assuming there may have been previous conversation context, generate a clear and natural instruction that tells the model to perform the action described by the tag on the input. 
+                    The generated instruction should be framed as a direct request, written in a way that feels like a continuation of an ongoing conversation (not a full standalone prompt unless necessary). 
+                    Assume the model already knows the prior context, and focus on being concise, specific, and natural.
+                    Input: ${inputBox.innerText}, Tag: ${newTag}`;
+                    callOpenAI(newPrompt, (reply) => {
+                        inputBox.innerHTML = `${inputBox.innerHTML}<br>${reply}`;
+                    });
+                    setTimeout(() => inputBox.dispatchEvent(new InputEvent("input", { bubbles: true })), 0);
+                });
 
-            buttonContainer.appendChild(newTagBtn);
-            console.log("✅ 新標籤已注入：", newTag);
+                buttonContainer.appendChild(newTagBtn);
+                console.log("new tag injected", newTag);
+            }
         });
     });
 
     buttonContainer.appendChild(genTagBtn);
-    console.log("✅ 所有按鈕已注入");
+    console.log("All buttons injected");
 }
 
-// 主邏輯：等待輸入框並插入按鈕
+// wait for the page to load and the input box to be available
+// and then inject the buttons
 function setup() {
     const inputBox = document.querySelector("#prompt-textarea");
     if (!inputBox || inputBox.dataset.hooked === "true") return;
