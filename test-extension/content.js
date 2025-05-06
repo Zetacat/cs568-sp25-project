@@ -46,35 +46,35 @@ function injectButtons() {
     }
 
     // Translate Button
-    const translateBtn = document.createElement("button");
-    translateBtn.id = "tag-translate-btn";
-    translateBtn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-           xmlns="http://www.w3.org/2000/svg" class="mr-1">
-        <path fill-rule="evenodd" clip-rule="evenodd"
-          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10
-           10-4.48 10-10S17.52 2 12 2zm0 18c-1.1
-           0-2-.9-2-2s.9-2 2-2 2 .9
-           2 2-.9 2-2 2zm-1-14h2v6h-2V6z"
-          fill="currentColor"/>
-      </svg>
-      Translate
-    `;
-    translateBtn.className = `
-      flex items-center justify-center h-9 rounded-full border border-token-border-default text-token-text-secondary min-w-8 w-auto px-3 text-[13px] font-semibold hover:bg-token-main-surface-secondary transition
-    `;
+    // const translateBtn = document.createElement("button");
+    // translateBtn.id = "tag-translate-btn";
+    // translateBtn.innerHTML = `
+    //   <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+    //        xmlns="http://www.w3.org/2000/svg" class="mr-1">
+    //     <path fill-rule="evenodd" clip-rule="evenodd"
+    //       d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10
+    //        10-4.48 10-10S17.52 2 12 2zm0 18c-1.1
+    //        0-2-.9-2-2s.9-2 2-2 2 .9
+    //        2 2-.9 2-2 2zm-1-14h2v6h-2V6z"
+    //       fill="currentColor"/>
+    //   </svg>
+    //   Translate
+    // `;
+    // translateBtn.className = `
+    //   flex items-center justify-center h-9 rounded-full border border-token-border-default text-token-text-secondary min-w-8 w-auto px-3 text-[13px] font-semibold hover:bg-token-main-surface-secondary transition
+    // `;
 
-    translateBtn.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const inputBox = document.querySelector("#prompt-textarea");
-        if (!inputBox) return;
+    // translateBtn.addEventListener("mousedown", (e) => {
+    //     e.preventDefault();
+    //     e.stopPropagation();
+    //     const inputBox = document.querySelector("#prompt-textarea");
+    //     if (!inputBox) return;
 
-        inputBox.innerText = "Translate\n" + inputBox.innerText;
-        setTimeout(() => inputBox.dispatchEvent(new InputEvent("input", { bubbles: true })), 0);
-    });
+    //     inputBox.innerText = "Translate\n" + inputBox.innerText;
+    //     setTimeout(() => inputBox.dispatchEvent(new InputEvent("input", { bubbles: true })), 0);
+    // });
 
-    buttonContainer.appendChild(translateBtn);
+    // buttonContainer.appendChild(translateBtn);
 
     // Generate Tag Button
     const genTagBtn = document.createElement("button");
