@@ -32,6 +32,24 @@ function callOpenAI(promptText, callback) {
     });
 }
 
+function moveCaretToEnd(el) {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
+
+function scrollToBottom(el) {
+    const scrollParent = el.closest(".overflow-auto, .max-h-\\[25dvh\\], .max-h-52");
+    if (scrollParent) {
+        scrollParent.scrollTop = scrollParent.scrollHeight;
+    } else {
+        console.warn("⚠️ Scrollable container not found");
+    }
+}
+
 function injectButtons() {
     const buttonContainer = document.querySelector('[data-testid="composer-footer-actions"]');
     if (!buttonContainer || document.getElementById("tag-translate-btn")) return;
@@ -162,7 +180,17 @@ Output Tags:
                     Assume the model already knows the prior context, and focus on being concise, specific, and natural.
                     Input: ${inputBox.innerText}, Tag: ${newTag}`;
                     callOpenAI(newPrompt, (reply) => {
-                        inputBox.innerHTML = `${inputBox.innerHTML}<br>${reply}`;
+                        // inputBox.innerHTML = `${inputBox.innerHTML}<br>${reply}`;
+                        const newParagraph = document.createElement("p");
+                        newParagraph.textContent = reply;
+                        inputBox.appendChild(newParagraph);
+
+                        // Force caret to move to the bottom + notify the editor
+                        setTimeout(() => {
+                            moveCaretToEnd(inputBox);
+                            scrollToBottom(inputBox);
+                            inputBox.dispatchEvent(new InputEvent("input", { bubbles: true }));
+                        }, 0);
                     });
                     setTimeout(() => inputBox.dispatchEvent(new InputEvent("input", { bubbles: true })), 0);
                 });
